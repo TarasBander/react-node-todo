@@ -6,7 +6,7 @@ export interface Todo {
   completed: boolean;
 }
 
-const API_URL = 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const fetchTodos = async (): Promise<Todo[]> => {
   const res = await axios.get(`${API_URL}/todos`);

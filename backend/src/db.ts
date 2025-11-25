@@ -1,5 +1,8 @@
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export interface Todo {
   id: number;
@@ -11,7 +14,7 @@ let db: Database<sqlite3.Database, sqlite3.Statement>;
 
 export async function initDB() {
   db = await open({
-    filename: './database.db',
+    filename: process.env.DATABASE_PATH ?? './database.db',
     driver: sqlite3.Database,
   });
 
