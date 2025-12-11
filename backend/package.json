@@ -11,10 +11,12 @@
     "@hono/node-server": "^1.13.0",
     "dotenv": "^17.2.3",
     "hono": "^4.6.5",
+    "jsonwebtoken": "^9.0.3",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "nodemon": "^3.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"

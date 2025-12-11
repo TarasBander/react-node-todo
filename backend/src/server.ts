@@ -3,9 +3,11 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 import { serve } from '@hono/node-server';
+import dotenv from 'dotenv';
+
 import { initDB } from './db';
 import { getTodos, createTodo, deleteTodo, DBError, AuthorisationError } from './app';
-import dotenv from 'dotenv';
+import { loginHandler, authenticate } from './auth';
 
 dotenv.config();
 
@@ -16,8 +18,18 @@ app.use('*', cors());
 app.use('*', logger());
 app.use('*', prettyJSON());
 
+app.get('/health', (c) => c.json({ status: 'ok' }));
+
+app.post('/login', async (c) => {
+  try {
+    return await loginHandler(c);
+  } catch (err) {
+    return handleError(c, err);
+  }
+});
+
 // --- Routes ---
-app.get('/todos', async (c) => {
+app.get('/todos', authenticate, async (c) => {
   try {
     const todos = await getTodos();
     return c.json(todos);
@@ -26,23 +38,21 @@ app.get('/todos', async (c) => {
   }
 });
 
-app.post('/todos', async (c) => {
+app.post('/todos', authenticate, async (c) => {
   try {
-    const body = await c.req.json<{ title?: string }>();
-    if (!body.title) return c.json({ error: "Title is required" }, 400);
-
-    const newTodo = await createTodo(body.title);
-    return c.json(newTodo, 201);
+    const { title } = await c.req.json<{ title: string }>();
+    const todo = await createTodo(title);
+    return c.json(todo, 201);
   } catch (err) {
     return handleError(c, err);
   }
 });
 
-app.delete('/todos/:id', async (c) => {
+app.delete('/todos/:id', authenticate, async (c) => {
   try {
     const id = c.req.param('id');
     await deleteTodo(id);
-    return c.json({ success: true });
+    return c.body(null, 204);
   } catch (err) {
     return handleError(c, err);
   }
