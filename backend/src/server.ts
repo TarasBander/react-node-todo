@@ -4,7 +4,7 @@ import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 import { serve } from '@hono/node-server';
 import { initDB } from './db';
-import { getTodos, createTodo, deleteTodo } from './app';
+import { getTodos, createTodo, deleteTodo, DBError, AuthorisationError } from './app';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -21,8 +21,8 @@ app.get('/todos', async (c) => {
   try {
     const todos = await getTodos();
     return c.json(todos);
-  } catch (err: any) {
-    return c.json({ error: (err as Error).message }, 500);
+  } catch (err) {
+    return handleError(c, err);
   }
 });
 
@@ -33,8 +33,8 @@ app.post('/todos', async (c) => {
 
     const newTodo = await createTodo(body.title);
     return c.json(newTodo, 201);
-  } catch (err: any) {
-    return c.json({ error: err.message }, 500);
+  } catch (err) {
+    return handleError(c, err);
   }
 });
 
@@ -43,8 +43,8 @@ app.delete('/todos/:id', async (c) => {
     const id = c.req.param('id');
     await deleteTodo(id);
     return c.json({ success: true });
-  } catch (err: any) {
-    return c.json({ error: (err as Error).message }, 500);
+  } catch (err) {
+    return handleError(c, err);
   }
 });
 
@@ -55,3 +55,13 @@ const PORT = Number(process.env.PORT) || 4000;
   serve({ fetch: app.fetch, port: PORT });
   console.log(`Hono backend running on http://localhost:${PORT}`);
 })();
+
+function handleError(c: any, err: unknown) {
+  if (err instanceof AuthorisationError) {
+    return c.json({ error: err.message }, 401);
+  } else if (err instanceof DBError) {
+    return c.json({ error: err.message }, 400);
+  } else {
+    return c.json({ error: 'unknown error' }, 500);
+  }
+}
