@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Box, TextField, Button, Paper, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { login } from '../api';
 
 export default function Login() {
@@ -7,6 +8,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,7 +16,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login(username, password);
-      window.location.href = '/';
+      navigate('/', { replace: true });
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed');
     } finally {
